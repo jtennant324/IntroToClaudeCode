@@ -190,7 +190,7 @@
 </div>
 
 <script>
-let API_KEY = null;
+const WORKER_URL = "https://fragrant-feather-ac39.j-a-tennant.workers.dev/";
 
 const SYSTEM = `You are a practical guide to Claude Code for developers in corporate/enterprise environments. Claude Code is Anthropic's agentic coding assistant that runs in the terminal (CLI).
 
@@ -413,9 +413,9 @@ async function sendMessage(text, mockup) {
   document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
 
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch(WORKER_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": API_KEY, "anthropic-version": "2023-06-01" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: SYSTEM, messages: history })
     });
     const data = await res.json();
@@ -448,30 +448,6 @@ input.addEventListener("input", () => {
 });
 
 sendBtn.addEventListener("click", () => sendMessage(input.value, null));
-</script>
-
-<!-- API KEY OVERLAY -->
-<div id="api-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(249,249,247,0.97);display:flex;align-items:center;justify-content:center;z-index:1000;">
-  <div style="background:#fff;border:0.5px solid #d9d9d4;border-radius:12px;padding:40px;max-width:440px;width:90%;box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-    <div style="font-size:24px;color:#f97316;margin-bottom:16px;text-align:center">✺</div>
-    <h2 style="font-size:18px;font-weight:600;margin-bottom:8px;text-align:center">Intro to Claude Code</h2>
-    <p style="font-size:13px;color:#666;margin-bottom:24px;text-align:center;line-height:1.6">Enter your Anthropic API key to get started. Your key is never stored and exists only in memory for this session.</p>
-    <input id="api-key-input" type="password" placeholder="sk-ant-..." style="width:100%;padding:10px 14px;border:0.5px solid #ccc;border-radius:8px;font-size:14px;font-family:Inter,sans-serif;outline:none;margin-bottom:12px;"/>
-    <button id="api-key-btn" style="width:100%;padding:10px;background:#f97316;color:#fff;border:none;border-radius:8px;font-size:14px;font-family:Inter,sans-serif;font-weight:600;cursor:pointer;">Get Started</button>
-    <p style="font-size:12px;color:#aaa;margin-top:16px;text-align:center">Get your API key at <a href="https://console.anthropic.com" target="_blank" style="color:#f97316">console.anthropic.com</a></p>
-  </div>
-</div>
-
-<script>
-document.getElementById("api-key-btn").addEventListener("click", () => {
-  const key = document.getElementById("api-key-input").value.trim();
-  if (!key.startsWith("sk-")) { alert("Please enter a valid Anthropic API key."); return; }
-  API_KEY = key;
-  document.getElementById("api-overlay").style.display = "none";
-});
-document.getElementById("api-key-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") document.getElementById("api-key-btn").click();
-});
 </script>
 
 </body>
