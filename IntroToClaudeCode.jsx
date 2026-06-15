@@ -1,50 +1,232 @@
-import { useState, useRef, useEffect } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Intro to Claude Code</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"/>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; font-size: 14px; background: #f9f9f7; color: #1a1a1a; height: 100vh; overflow: hidden; display: flex; }
 
-const SYSTEM = `You are a practical guide to Claude Code for developers in corporate/enterprise environments. Claude Code is Anthropic's agentic coding assistant that runs in the terminal (CLI). Be concise and practical. Include actual terminal commands or slash commands in backtick code blocks. Under 200 words unless truly needed. Write for developers new to Claude Code but competent engineers.`;
+  /* SIDEBAR */
+  #sidebar { width: 196px; background: #f0efec; border-right: 0.5px solid #d9d9d4; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow: hidden; }
+  .sb-top { padding: 12px 12px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid #d9d9d4; }
+  .sb-top .logo { font-size: 18px; color: #f97316; margin-left: 2px; }
+  .sb-top .code-label { font-size: 13px; font-weight: 600; }
+  .sb-section { padding: 8px 8px 4px; }
+  .sb-nav-btn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; background: transparent; border: none; color: #6b6b6b; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; border-radius: 6px; text-align: left; }
+  .sb-nav-btn:hover { background: #e5e5e0; color: #1a1a1a; }
+  .sb-divider { height: 0.5px; background: #d9d9d4; margin: 4px 0; }
+  .sb-label { font-size: 11px; color: #aaa; padding: 4px 10px 6px; letter-spacing: 0.07em; text-transform: uppercase; }
+  .cat-head { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; background: transparent; border: none; color: #444; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; border-radius: 6px; text-align: left; }
+  .cat-head:hover { background: #e5e5e0; color: #1a1a1a; }
+  .q-btn { display: block; width: 100%; padding: 5px 8px 5px 24px; background: transparent; border: none; color: #888; font-size: 12.5px; font-family: 'Inter', sans-serif; cursor: pointer; text-align: left; border-radius: 6px; line-height: 1.4; }
+  .q-btn:hover { background: #e5e5e0; color: #1a1a1a; }
+  #questions-list { flex: 1; overflow-y: auto; padding: 4px 6px; }
+  .sb-recents { border-top: 0.5px solid #d9d9d4; padding: 8px 6px; }
+  .recent-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; color: #666; font-size: 12.5px; border-radius: 6px; }
+  .recent-dot { width: 7px; height: 7px; border-radius: 50%; background: #f97316; flex-shrink: 0; }
+  .sb-user { border-top: 0.5px solid #d9d9d4; padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+  .user-avatar { width: 26px; height: 26px; border-radius: 50%; background: #f9731618; border: 1px solid #f9731640; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #f97316; font-weight: 700; flex-shrink: 0; }
+  .user-name { font-size: 13px; flex: 1; }
+  .user-badge { font-size: 10px; background: #f9731614; color: #f97316; padding: 2px 6px; border-radius: 4px; }
+  .new-session-btn { display: flex; align-items: center; gap: 7px; width: 100%; padding: 7px 8px; background: transparent; border: 0.5px solid #ccc; color: #1a1a1a; font-size: 13px; font-family: 'Inter', sans-serif; cursor: pointer; border-radius: 6px; font-weight: 500; }
+  .new-session-btn:hover { background: #e5e5e0; }
 
-function TerminalMockup() {
-  return (
-    <div style={{ background:"#0d0d0d", borderRadius:8, padding:"20px 22px", fontFamily:"'Courier New', Consolas, monospace", fontSize:13, margin:"12px 0", lineHeight:1.6 }}>
-      <div style={{ border:"1px solid #cd7f32", borderRadius:4, padding:"16px 20px", display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginBottom:16 }}>
-        <div>
-          <div style={{ color:"#cd7f32", fontWeight:"bold", marginBottom:10 }}>Claude Code v2.1.29</div>
-          <div style={{ color:"#ffffff", marginBottom:10 }}>Welcome back!</div>
-          <div style={{ color:"#cd7f32", fontSize:14, marginBottom:10, lineHeight:1.8 }}><div>{"▶  ▶  ▶"}</div><div>{"●  ●  ●"}</div></div>
-          <div style={{ color:"#cccccc", fontSize:12 }}>Sonnet 4.6 · Claude Pro</div>
-          <div style={{ color:"#888888", fontSize:12 }}>C:\Users\YourName</div>
-        </div>
-        <div style={{ borderLeft:"1px solid #333", paddingLeft:16 }}>
-          <div style={{ color:"#cd7f32", fontWeight:"bold", marginBottom:6 }}>Tips for getting started</div>
-          <div style={{ color:"#888888", fontSize:12, marginBottom:4 }}>Run /init to create a CLAUDE.md</div>
-          <div style={{ color:"#888888", fontSize:12, marginBottom:14 }}>Run /help to see all commands</div>
-          <div style={{ color:"#cd7f32", fontWeight:"bold", marginBottom:6 }}>Recent activity</div>
-          <div style={{ color:"#888888", fontSize:12 }}>No recent activity</div>
-        </div>
+  /* MAIN */
+  #main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+  #topbar { height: 44px; border-bottom: 0.5px solid #d9d9d4; display: flex; align-items: center; padding: 0 18px; gap: 8px; flex-shrink: 0; }
+  .topbar-nav { font-size: 14px; color: #ccc; cursor: default; }
+  .topbar-path { font-size: 13px; color: #888; }
+  .topbar-title { font-size: 13px; font-weight: 500; }
+  .topbar-spacer { flex: 1; }
+
+  /* MESSAGES */
+  #messages { flex: 1; overflow-y: auto; padding: 24px 24px 16px; }
+  .msg-user { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+  .msg-user-bubble { background: #f0efec; border: 0.5px solid #d9d9d4; border-radius: 12px 12px 2px 12px; padding: 10px 14px; max-width: 72%; line-height: 1.65; }
+  .msg-assistant { margin-bottom: 24px; }
+  .msg-assistant-inner { display: flex; gap: 10px; align-items: flex-start; }
+  .msg-star { color: #f97316; font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .msg-content { line-height: 1.75; flex: 1; }
+  .msg-content p { margin-bottom: 8px; }
+  .msg-content strong { font-weight: 600; }
+  .msg-content code { background: #f0efec; border: 0.5px solid #d9d9d4; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; font-family: 'JetBrains Mono', monospace; }
+  .msg-content pre { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 6px; padding: 12px 14px; overflow-x: auto; margin: 8px 0; }
+  .msg-content pre code { background: transparent; border: none; padding: 0; color: #e6edf3; font-size: 12.5px; font-family: 'JetBrains Mono', monospace; line-height: 1.65; }
+  .msg-content ul { padding-left: 0; list-style: none; margin-bottom: 8px; }
+  .msg-content ul li { display: flex; gap: 8px; margin-bottom: 4px; padding-left: 4px; }
+  .msg-content ul li::before { content: "●"; color: #f97316; flex-shrink: 0; font-size: 10px; margin-top: 4px; }
+  .msg-content ol { padding-left: 0; list-style: none; margin-bottom: 8px; counter-reset: item; }
+  .msg-content ol li { display: flex; gap: 8px; margin-bottom: 4px; padding-left: 4px; counter-increment: item; }
+  .msg-content ol li::before { content: counter(item) "."; color: #f97316; flex-shrink: 0; min-width: 18px; font-size: 13px; }
+  .msg-content h1, .msg-content h2, .msg-content h3 { font-weight: 600; margin: 12px 0 4px; }
+  .msg-content h1 { font-size: 16px; }
+  .msg-content h2 { font-size: 15px; }
+  .msg-content h3 { font-size: 14px; }
+
+  /* FOLLOWUPS */
+  .followups { margin-left: 26px; margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .followup-label { font-size: 11px; color: #aaa; margin-bottom: 2px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .followup-btn { background: #f0efec; border: 0.5px solid #d9d9d4; border-radius: 6px; padding: 7px 12px; color: #666; font-size: 12.5px; font-family: 'Inter', sans-serif; cursor: pointer; text-align: left; line-height: 1.4; transition: all 0.15s; }
+  .followup-btn:hover { border-color: #f97316; color: #1a1a1a; background: #fff8f4; }
+  .followup-arrow { color: #f97316; margin-right: 6px; font-size: 11px; }
+
+  /* TERMINAL MOCKUP */
+  .terminal-mockup { background: #0d0d0d; border-radius: 8px; padding: 20px 22px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 12px 0 0 26px; line-height: 1.6; }
+  .terminal-grid { border: 1px solid #cd7f32; border-radius: 4px; padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+  .terminal-right { border-left: 1px solid #333; padding-left: 16px; }
+  .t-orange { color: #cd7f32; }
+  .t-white { color: #fff; }
+  .t-gray { color: #888; }
+  .t-light { color: #ccc; }
+  .t-prompt { color: #cd7f32; margin-bottom: 8px; }
+  .t-cursor { display: inline-block; width: 8px; height: 13px; background: #ccc; vertical-align: middle; }
+  .t-note { color: #555; font-size: 11px; margin-top: 10px; border-top: 1px solid #222; padding-top: 8px; }
+
+  /* PERMISSION MOCKUP */
+  .permission-mockup { background: #0d0d0d; border-radius: 8px; padding: 16px 18px; font-family: 'JetBrains Mono', monospace; font-size: 13px; margin: 12px 0 0 26px; line-height: 1.6; }
+  .permission-box { border: 1px solid #cd7f32; border-radius: 4px; padding: 10px 14px; margin: 10px 0; }
+
+  /* LOADING */
+  #loading { display: none; align-items: center; gap: 10px; margin-bottom: 16px; }
+  #loading .spin { animation: spin 1s linear infinite; color: #aaa; font-size: 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* INPUT */
+  #input-wrap { padding: 10px 18px 6px; flex-shrink: 0; }
+  #input-box { background: #f0efec; border: 0.5px solid #ccc; border-radius: 12px; display: flex; align-items: flex-end; gap: 8px; padding: 10px 14px; }
+  #input-box:focus-within { border-color: #f97316; }
+  #user-input { flex: 1; background: transparent; border: none; outline: none; color: #1a1a1a; font-family: 'Inter', sans-serif; font-size: 14px; resize: none; line-height: 1.5; }
+  #user-input::placeholder { color: #aaa; }
+  #send-btn { background: transparent; border: none; color: #aaa; cursor: pointer; padding: 4px; border-radius: 6px; display: flex; align-items: center; font-size: 18px; }
+  #send-btn:hover { color: #1a1a1a; background: #e5e5e0; }
+  #send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ACTION BAR */
+  #action-bar { padding: 6px 18px 14px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .accept-btn { background: transparent; border: 0.5px solid #d9d9d4; border-radius: 6px; padding: 4px 10px; color: #888; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+  .model-label { font-size: 12px; color: #aaa; }
+  .active-badge { font-size: 11px; color: #57ab5a; background: #57ab5a18; padding: 2px 7px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-top">
+    <i class="ti ti-layout-sidebar" style="font-size:15px;color:#aaa"></i>
+    <i class="ti ti-layout-columns" style="font-size:15px;color:#aaa"></i>
+    <span class="logo">✺</span>
+    <span class="code-label">Code</span>
+  </div>
+  <div class="sb-section">
+    <button class="new-session-btn"><i class="ti ti-plus" style="font-size:14px"></i> New session</button>
+  </div>
+  <div class="sb-section" style="padding-top:4px">
+    <button class="sb-nav-btn"><i class="ti ti-repeat" style="font-size:14px"></i> Routines</button>
+    <button class="sb-nav-btn"><i class="ti ti-adjustments" style="font-size:14px"></i> Customize</button>
+    <button class="sb-nav-btn"><i class="ti ti-dots" style="font-size:14px"></i> More</button>
+  </div>
+  <div class="sb-divider"></div>
+  <div id="questions-list">
+    <div class="sb-label">Questions</div>
+  </div>
+  <div class="sb-recents">
+    <div class="sb-label">Recents</div>
+    <div class="recent-item"><span class="recent-dot"></span> Intro to Claude Code</div>
+  </div>
+  <div class="sb-user">
+    <div class="user-avatar">J</div>
+    <span class="user-name">Jessica</span>
+    <span class="user-badge">Pro</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <i class="ti ti-arrow-left topbar-nav"></i>
+    <i class="ti ti-arrow-right topbar-nav"></i>
+    <i class="ti ti-refresh topbar-nav" style="margin-right:6px"></i>
+    <span class="topbar-path">sessions /</span>
+    <span class="topbar-title">Intro to Claude Code</span>
+    <i class="ti ti-chevron-down" style="font-size:11px;color:#aaa"></i>
+    <div class="topbar-spacer"></div>
+    <i class="ti ti-layout-columns" style="font-size:15px;color:#ccc"></i>
+  </div>
+
+  <div id="messages">
+    <div class="msg-assistant">
+      <div class="msg-assistant-inner">
+        <span class="msg-star">✺</span>
+        <div class="msg-content">Hi — I can help you get up to speed on Claude Code.<br><br>Pick a question from the sidebar, or type your own below.</div>
       </div>
-      <div style={{ color:"#cd7f32", marginBottom:8 }}>{">"} <span style={{ color:"#fff", background:"#2a2a2a", padding:"1px 6px" }}>review my login function</span></div>
-      <div style={{ color:"#cd7f32", marginBottom:10 }}>{"+"} Hashing... (thinking)</div>
-      <div style={{ color:"#ccc", marginBottom:10 }}>{">"} <span style={{ display:"inline-block", width:8, height:13, background:"#ccc", verticalAlign:"middle" }}/></div>
-      <div style={{ color:"#666666", fontSize:12 }}>esc to interrupt</div>
-      <div style={{ color:"#555555", fontSize:11, marginTop:10, borderTop:"1px solid #222", paddingTop:8 }}>↑ Claude Code running in Windows Terminal / PowerShell</div>
     </div>
-  );
-}
+  </div>
 
-function PermissionMockup() {
-  return (
-    <div style={{ background:"#0d0d0d", borderRadius:8, padding:"16px 18px", fontFamily:"'Courier New', Consolas, monospace", fontSize:13, margin:"12px 0", lineHeight:1.6 }}>
-      <div style={{ color:"#ccc", marginBottom:8 }}>{">"} run the test suite and fix any failures</div>
-      <div style={{ color:"#888", marginBottom:4 }}>{"●"} Reading package.json...</div>
-      <div style={{ color:"#888", marginBottom:12 }}>{"●"} Planning execution...</div>
-      <div style={{ border:"1px solid #cd7f32", borderRadius:4, padding:"10px 14px", marginBottom:10 }}>
-        <div style={{ color:"#cd7f32", fontWeight:"bold", marginBottom:4 }}>Claude wants to run a bash command:</div>
-        <div style={{ color:"#fff", marginBottom:8 }}>npm test</div>
-        <div style={{ color:"#888" }}>Allow? <span style={{ color:"#3fb950" }}>(y)</span>es / <span style={{ color:"#f85149" }}>(n)</span>o / <span style={{ color:"#79c0ff" }}>(a)</span>lways allow bash</div>
-      </div>
-      <div style={{ color:"#555", fontSize:11, borderTop:"1px solid #222", paddingTop:8 }}>↑ Claude always asks before running any command. You stay in control.</div>
+  <div id="loading">
+    <span class="msg-star">✺</span>
+    <i class="ti ti-loader spin"></i>
+  </div>
+
+  <div id="input-wrap">
+    <div id="input-box">
+      <textarea id="user-input" rows="1" placeholder="Type / for commands"></textarea>
+      <button id="send-btn"><i class="ti ti-arrow-up"></i></button>
     </div>
-  );
-}
+  </div>
+
+  <div id="action-bar">
+    <button class="accept-btn"><i class="ti ti-check" style="font-size:12px"></i> Accept edits <span style="color:#ccc">+</span></button>
+    <div class="topbar-spacer"></div>
+    <span class="model-label">Sonnet 4.6</span>
+    <span class="active-badge">Low</span>
+    <i class="ti ti-battery-2" style="font-size:14px;color:#ccc"></i>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://fragrant-feather-ac39.j-a-tennant.workers.dev/";
+
+const SYSTEM = `You are a practical guide to Claude Code for developers in corporate/enterprise environments. Claude Code is Anthropic's agentic coding assistant that runs in the terminal (CLI).
+
+You MUST respond ONLY with valid JSON in this exact format, no text before or after:
+{"answer": "your answer here", "followups": ["Question 1?", "Question 2?", "Question 3?"]}
+
+Rules for the answer field:
+- Use markdown: **bold**, bullet points with "- ", numbered lists with "1. ", inline code with backticks, code blocks with triple backticks
+- Be practical and accurate. Under 250 words unless truly needed.
+- For ANY question about installation, ALWAYS show all four methods clearly labeled by platform
+- Include actual commands in code blocks
+
+Accurate installation commands (use these exactly):
+- Mac/Linux/WSL: curl -fsSL https://claude.ai/install.sh | bash
+- Mac (Homebrew): brew install --cask claude-code
+- Windows (winget): winget install Anthropic.ClaudeCode
+- All platforms (npm, deprecated but works): npm install -g @anthropic-ai/claude-code
+- After installing on any platform: claude auth login
+
+Rules for followups:
+- Exactly 3 short questions that naturally follow from what you just answered
+- Make them specific to the answer, like the next logical things someone would want to know
+
+Token knowledge:
+- Tokens are the units Claude uses to process text. Roughly 1 token = 4 characters or about 3/4 of a word.
+- Both your input and Claude's output consume tokens.
+- Context window is up to 1 million tokens for Claude Code.
+- If you run out mid-session: Claude will warn you. Use /compact to summarize and free up space, or /clear to start fresh.
+- To save tokens: use /compact regularly in long sessions, be specific in prompts, use /clear between unrelated tasks, reference files by path instead of pasting them.
+- Token usage resets on a rolling basis depending on plan tier.
+
+Tips and limits knowledge:
+- Claude Code CAN: read/write files, run terminal commands, manage git, run tests, refactor across multiple files, work autonomously on multi-step tasks, use MCP servers to connect to external tools.
+- Claude Code CANNOT: access the internet directly unless given a browser/search MCP, run indefinitely without hitting token limits, always get complex logic right first try, replace human judgment on architecture decisions.
+- Be wary when: making irreversible changes, working in production environments, the task is ambiguous, working with sensitive data.
+- Tips: use CLAUDE.md for persistent project context, use /plan before big changes, use git so you can always roll back, be specific in prompts, use /clear between unrelated tasks.`;
 
 const CATEGORIES = [
   {
@@ -52,7 +234,7 @@ const CATEGORIES = [
     qs: [
       { text: "What is Claude Code?", mockup: null },
       { text: "What does the terminal look like?", mockup: "terminal" },
-      { text: "How do I install and launch it?", mockup: null },
+      { text: "How do I install it?", mockup: null },
       { text: "How is it different from Claude.ai?", mockup: null },
     ]
   },
@@ -83,215 +265,189 @@ const CATEGORIES = [
       { text: "Do I need an API key at work?", mockup: null },
     ]
   },
+  {
+    label: "Tokens", icon: "ti-coin",
+    qs: [
+      { text: "What are tokens?", mockup: null },
+      { text: "How do I get more tokens?", mockup: null },
+      { text: "What happens if I run out of tokens?", mockup: null },
+      { text: "What is the most efficient way to use tokens?", mockup: null },
+    ]
+  },
+  {
+    label: "Tips & Limits", icon: "ti-bulb",
+    qs: [
+      { text: "How can I get the most out of Claude Code?", mockup: null },
+      { text: "What cool things can Claude Code do?", mockup: null },
+      { text: "What are some tips and tricks?", mockup: null },
+      { text: "What can Claude Code NOT do?", mockup: null },
+      { text: "When should I be wary of Claude Code?", mockup: null },
+    ]
+  },
 ];
 
-function renderText(text) {
-  return text.split("\n").map((line, i) => {
-    const parts = line.split(/(`[^`]+`)/g);
-    return (
-      <div key={i} style={{ minHeight: line === "" ? "0.75em" : undefined }}>
-        {parts.map((p, j) =>
-          p.startsWith("`") && p.endsWith("`") && p.length > 2
-            ? <code key={j} style={{ background:"var(--color-background-secondary)", border:"0.5px solid var(--color-border-tertiary)", padding:"1px 5px", borderRadius:4, fontSize:12.5, fontFamily:"var(--font-mono)", color:"var(--color-text-primary)" }}>{p.slice(1,-1)}</code>
-            : <span key={j}>{p}</span>
-        )}
-      </div>
-    );
-  });
-}
-
-export default function App() {
-  const [messages, setMessages] = useState([{
-    role: "assistant",
-    content: "Hi — I can help you get up to speed on Claude Code.\n\nPick a question from the sidebar, or type your own below.",
-    mockup: null
-  }]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [openCat, setOpenCat] = useState(0);
-  const bottomRef = useRef(null);
-
-  useEffect(() => {
-    const t = document.createElement("link"); t.rel = "stylesheet";
-    t.href = "https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css";
-    document.head.appendChild(t);
-  }, []);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  const send = async (text, mockup = null) => {
-    if (!text.trim() || loading) return;
-    const um = { role: "user", content: text };
-    const hist = [...messages, um];
-    setMessages(hist);
-    setInput("");
-    setLoading(true);
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-6", max_tokens: 1000, system: SYSTEM,
-          messages: hist.map(m => ({ role: m.role, content: m.content }))
-        })
-      });
-      const data = await res.json();
-      const reply = data.content?.find(b => b.type === "text")?.text || "No response.";
-      setMessages(p => [...p, { role: "assistant", content: reply, mockup }]);
-    } catch (e) {
-      setMessages(p => [...p, { role: "assistant", content: `Error: ${e.message}`, mockup: null }]);
-    }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{ display:"flex", height:"100vh", background:"var(--color-background-primary)", color:"var(--color-text-primary)", fontFamily:"var(--font-sans)", fontSize:14, overflow:"hidden" }}>
-      <style>{`
-        * { box-sizing:border-box; margin:0; padding:0; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .sb-btn { display:flex; align-items:center; gap:8px; width:100%; padding:6px 10px; background:transparent; border:none; color:var(--color-text-secondary); font-size:13px; font-family:var(--font-sans); cursor:pointer; border-radius:var(--border-radius-md); text-align:left; }
-        .sb-btn:hover { background:var(--color-background-tertiary); color:var(--color-text-primary); }
-        .cat-head { display:flex; align-items:center; gap:8px; width:100%; padding:6px 10px; background:transparent; border:none; color:var(--color-text-secondary); font-size:13px; font-weight:500; font-family:var(--font-sans); cursor:pointer; border-radius:var(--border-radius-md); text-align:left; }
-        .cat-head:hover { background:var(--color-background-tertiary); color:var(--color-text-primary); }
-        .q-btn { display:block; width:100%; padding:5px 8px 5px 24px; background:transparent; border:none; color:var(--color-text-tertiary); font-size:12.5px; font-family:var(--font-sans); cursor:pointer; text-align:left; border-radius:var(--border-radius-md); line-height:1.4; }
-        .q-btn:hover { background:var(--color-background-tertiary); color:var(--color-text-primary); }
-        .new-btn { display:flex; align-items:center; gap:7px; width:100%; padding:7px 10px; background:transparent; border:0.5px solid var(--color-border-secondary); color:var(--color-text-primary); font-size:13px; font-family:var(--font-sans); cursor:pointer; border-radius:var(--border-radius-md); font-weight:500; }
-        .new-btn:hover { background:var(--color-background-tertiary); }
-        .send-btn { background:transparent; border:none; color:var(--color-text-tertiary); cursor:pointer; padding:6px; border-radius:var(--border-radius-md); display:flex; align-items:center; }
-        .send-btn:hover { color:var(--color-text-primary); background:var(--color-background-tertiary); }
-        .send-btn:disabled { opacity:0.3; cursor:not-allowed; }
-        textarea { outline:none; resize:none; background:transparent; border:none; color:var(--color-text-primary); font-family:var(--font-sans); font-size:14px; width:100%; line-height:1.5; }
-        textarea::placeholder { color:var(--color-text-tertiary); }
-        .accept-btn { background:transparent; border:0.5px solid var(--color-border-tertiary); border-radius:var(--border-radius-md); padding:4px 10px; color:var(--color-text-secondary); font-size:12px; font-family:var(--font-sans); cursor:pointer; display:flex; align-items:center; gap:5px; }
-        .accept-btn:hover { background:var(--color-background-secondary); }
-      `}</style>
-
-      {/* SIDEBAR */}
-      <div style={{ width:196, background:"var(--color-background-secondary)", borderRight:"0.5px solid var(--color-border-tertiary)", display:"flex", flexDirection:"column", flexShrink:0 }}>
-
-        <div style={{ padding:"12px 12px 10px", display:"flex", alignItems:"center", gap:10, borderBottom:"0.5px solid var(--color-border-tertiary)" }}>
-          <i className="ti ti-layout-sidebar" style={{ fontSize:15, color:"var(--color-text-tertiary)" }}/>
-          <i className="ti ti-layout-columns" style={{ fontSize:15, color:"var(--color-text-tertiary)" }}/>
-          <span style={{ fontSize:16, color:"#f97316", marginLeft:2 }}>✺</span>
-          <span style={{ fontSize:13, fontWeight:500 }}>Code</span>
-        </div>
-
-        <div style={{ padding:"10px 10px 6px" }}>
-          <button className="new-btn">
-            <i className="ti ti-plus" style={{ fontSize:14 }}/> New session
-          </button>
-        </div>
-
-        <div style={{ padding:"4px 6px" }}>
-          <button className="sb-btn"><i className="ti ti-repeat" style={{ fontSize:14 }}/> Routines</button>
-          <button className="sb-btn"><i className="ti ti-adjustments" style={{ fontSize:14 }}/> Customize</button>
-          <button className="sb-btn"><i className="ti ti-dots" style={{ fontSize:14 }}/> More</button>
-        </div>
-
-        <div style={{ height:"0.5px", background:"var(--color-border-tertiary)", margin:"4px 0" }}/>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"6px 6px" }}>
-          <div style={{ fontSize:11, color:"var(--color-text-tertiary)", padding:"4px 10px 6px", letterSpacing:"0.07em", textTransform:"uppercase" }}>Questions</div>
-          {CATEGORIES.map((cat, ci) => (
-            <div key={ci}>
-              <button className="cat-head" onClick={() => setOpenCat(openCat === ci ? -1 : ci)}>
-                <i className={`ti ${cat.icon}`} style={{ fontSize:13 }}/>
-                <span style={{ flex:1 }}>{cat.label}</span>
-                <i className={`ti ti-chevron-${openCat===ci?"down":"right"}`} style={{ fontSize:11 }}/>
-              </button>
-              {openCat === ci && cat.qs.map((q, qi) => (
-                <button key={qi} className="q-btn" onClick={() => send(q.text, q.mockup)}>
-                  {q.text}
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div style={{ borderTop:"0.5px solid var(--color-border-tertiary)", padding:"8px 6px" }}>
-          <div style={{ fontSize:11, color:"var(--color-text-tertiary)", padding:"4px 10px 6px", letterSpacing:"0.07em", textTransform:"uppercase" }}>Recents</div>
-          <button className="sb-btn">
-            <span style={{ width:7, height:7, borderRadius:"50%", background:"#f97316", flexShrink:0 }}/>
-            <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontSize:12.5 }}>Intro to Claude Code</span>
-          </button>
-        </div>
-
-        <div style={{ borderTop:"0.5px solid var(--color-border-tertiary)", padding:"10px 12px", display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ width:26, height:26, borderRadius:"50%", background:"#f9731618", border:"1px solid #f9731640", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#f97316", fontWeight:700 }}>J</div>
-          <span style={{ fontSize:13, flex:1 }}>Jessica</span>
-          <span style={{ fontSize:10, background:"#f9731614", color:"#f97316", padding:"2px 6px", borderRadius:4 }}>Pro</span>
-        </div>
-      </div>
-
-      {/* MAIN */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0 }}>
-
-        <div style={{ height:44, borderBottom:"0.5px solid var(--color-border-tertiary)", display:"flex", alignItems:"center", padding:"0 18px", gap:8, flexShrink:0 }}>
-          <i className="ti ti-arrow-left" style={{ fontSize:14, color:"var(--color-text-tertiary)" }}/>
-          <i className="ti ti-arrow-right" style={{ fontSize:14, color:"var(--color-text-tertiary)" }}/>
-          <i className="ti ti-refresh" style={{ fontSize:14, color:"var(--color-text-tertiary)", marginRight:6 }}/>
-          <span style={{ fontSize:13, color:"var(--color-text-tertiary)" }}>sessions</span>
-          <span style={{ fontSize:13, color:"var(--color-text-tertiary)" }}>/</span>
-          <span style={{ fontSize:13, fontWeight:500 }}>Intro to Claude Code</span>
-          <i className="ti ti-chevron-down" style={{ fontSize:11, color:"var(--color-text-tertiary)" }}/>
-          <div style={{ flex:1 }}/>
-          <i className="ti ti-layout-columns" style={{ fontSize:15, color:"var(--color-text-tertiary)" }}/>
-        </div>
-
-        <div style={{ flex:1, overflowY:"auto", padding:"24px 24px 16px" }}>
-          {messages.map((m, i) => (
-            <div key={i} style={{ marginBottom:20 }}>
-              {m.role === "user" ? (
-                <div style={{ display:"flex", justifyContent:"flex-end" }}>
-                  <div style={{ background:"var(--color-background-secondary)", border:"0.5px solid var(--color-border-tertiary)", borderRadius:"12px 12px 2px 12px", padding:"10px 14px", maxWidth:"72%", lineHeight:1.65 }}>
-                    {m.content}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
-                    <span style={{ color:"#f97316", fontSize:16, flexShrink:0, marginTop:2 }}>✺</span>
-                    <div style={{ lineHeight:1.75, flex:1 }}>{renderText(m.content)}</div>
-                  </div>
-                  {m.mockup === "terminal" && <div style={{ marginLeft:26 }}><TerminalMockup/></div>}
-                  {m.mockup === "permission" && <div style={{ marginLeft:26 }}><PermissionMockup/></div>}
-                </div>
-              )}
-            </div>
-          ))}
-          {loading && (
-            <div style={{ display:"flex", gap:10, alignItems:"center" }}>
-              <span style={{ color:"#f97316", fontSize:16 }}>✺</span>
-              <i className="ti ti-loader" style={{ fontSize:14, color:"var(--color-text-tertiary)", animation:"spin 1s linear infinite" }}/>
-            </div>
-          )}
-          <div ref={bottomRef}/>
-        </div>
-
-        <div style={{ padding:"10px 18px 6px", flexShrink:0 }}>
-          <div style={{ background:"var(--color-background-secondary)", border:"0.5px solid var(--color-border-secondary)", borderRadius:"var(--border-radius-lg)", display:"flex", alignItems:"flex-end", gap:8, padding:"10px 14px" }}>
-            <textarea value={input} rows={1}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input);} }}
-              placeholder="Type / for commands"
-            />
-            <button className="send-btn" onClick={() => send(input)} disabled={loading||!input.trim()}>
-              <i className="ti ti-arrow-up" style={{ fontSize:16 }}/>
-            </button>
-          </div>
-        </div>
-
-        <div style={{ padding:"6px 18px 14px", display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
-          <button className="accept-btn">
-            <i className="ti ti-check" style={{ fontSize:12 }}/> Accept edits <span style={{ color:"var(--color-text-tertiary)" }}>+</span>
-          </button>
-          <div style={{ flex:1 }}/>
-          <span style={{ fontSize:12, color:"var(--color-text-tertiary)" }}>Sonnet 4.6</span>
-          <span style={{ fontSize:11, color:"#57ab5a", background:"#57ab5a18", padding:"2px 7px", borderRadius:4 }}>Low</span>
-          <i className="ti ti-battery-2" style={{ fontSize:14, color:"var(--color-text-tertiary)" }}/>
-        </div>
-      </div>
+const TERMINAL_MOCKUP_HTML = `
+<div class="terminal-mockup">
+  <div class="terminal-grid">
+    <div>
+      <div class="t-orange" style="font-weight:bold;margin-bottom:10px">Claude Code v2.1.29</div>
+      <div class="t-white" style="margin-bottom:10px">Welcome back!</div>
+      <div class="t-orange" style="margin-bottom:10px;font-size:13px">&gt; &gt; &gt;<br>* * *</div>
+      <div class="t-light" style="font-size:12px">Sonnet 4.6 · Claude Pro</div>
+      <div class="t-gray" style="font-size:12px">C:\\Users\\YourName</div>
     </div>
-  );
+    <div class="terminal-right">
+      <div class="t-orange" style="font-weight:bold;margin-bottom:6px">Tips for getting started</div>
+      <div class="t-gray" style="font-size:12px;margin-bottom:4px">Run /init to create a CLAUDE.md</div>
+      <div class="t-gray" style="font-size:12px;margin-bottom:14px">Run /help to see all commands</div>
+      <div class="t-orange" style="font-weight:bold;margin-bottom:6px">Recent activity</div>
+      <div class="t-gray" style="font-size:12px">No recent activity</div>
+    </div>
+  </div>
+  <div class="t-prompt">&gt; <span style="color:#fff;background:#2a2a2a;padding:1px 6px">review my login function</span></div>
+  <div class="t-prompt">+ Hashing... (thinking)</div>
+  <div style="color:#ccc;margin-bottom:10px">&gt; <span class="t-cursor"></span></div>
+  <div class="t-gray" style="font-size:12px">esc to interrupt</div>
+  <div class="t-note">&#8593; Claude Code running in Windows Terminal / PowerShell</div>
+</div>`;
+
+const PERMISSION_MOCKUP_HTML = `
+<div class="permission-mockup">
+  <div class="t-light" style="margin-bottom:8px">&gt; run the test suite and fix any failures</div>
+  <div class="t-gray" style="margin-bottom:4px">* Reading package.json...</div>
+  <div class="t-gray" style="margin-bottom:12px">* Planning execution...</div>
+  <div class="permission-box">
+    <div class="t-orange" style="font-weight:bold;margin-bottom:4px">Claude wants to run a bash command:</div>
+    <div class="t-white" style="margin-bottom:8px">npm test</div>
+    <div class="t-gray">Allow? <span style="color:#3fb950">(y)</span>es / <span style="color:#f85149">(n)</span>o / <span style="color:#79c0ff">(a)</span>lways allow bash</div>
+  </div>
+  <div style="color:#555;font-size:11px;border-top:1px solid #222;padding-top:8px;margin-top:8px">&#8593; Claude always asks before running any command. You stay in control.</div>
+</div>`;
+
+let history = [];
+let openCat = 0;
+
+// Build sidebar
+const qList = document.getElementById("questions-list");
+CATEGORIES.forEach((cat, ci) => {
+  const head = document.createElement("button");
+  head.className = "cat-head";
+  head.innerHTML = `<i class="ti ${cat.icon}" style="font-size:13px"></i><span style="flex:1">${cat.label}</span><i class="ti ti-chevron-${ci === 0 ? 'down' : 'right'}" style="font-size:11px" id="chevron-${ci}"></i>`;
+  head.onclick = () => {
+    openCat = openCat === ci ? -1 : ci;
+    document.querySelectorAll(".cat-questions").forEach((el, i) => {
+      el.style.display = i === openCat ? "block" : "none";
+    });
+    document.querySelectorAll("[id^='chevron-']").forEach((el, i) => {
+      el.className = `ti ti-chevron-${i === openCat ? "down" : "right"}`;
+    });
+  };
+  qList.appendChild(head);
+
+  const qGroup = document.createElement("div");
+  qGroup.className = "cat-questions";
+  qGroup.style.display = ci === 0 ? "block" : "none";
+  cat.qs.forEach(q => {
+    const btn = document.createElement("button");
+    btn.className = "q-btn";
+    btn.textContent = q.text;
+    btn.onclick = () => sendMessage(q.text, q.mockup);
+    qGroup.appendChild(btn);
+  });
+  qList.appendChild(qGroup);
+});
+
+function parseResponse(raw) {
+  try {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (match) {
+      const parsed = JSON.parse(match[0]);
+      if (parsed.answer) return { answer: parsed.answer, followups: parsed.followups || [] };
+    }
+  } catch(e) {}
+  return { answer: raw, followups: [] };
 }
+
+function renderMarkdown(text) {
+  return marked.parse(text);
+}
+
+function addMessage(role, content, mockup, followups) {
+  const messages = document.getElementById("messages");
+  const div = document.createElement("div");
+
+  if (role === "user") {
+    div.className = "msg-user";
+    div.innerHTML = `<div class="msg-user-bubble">${content}</div>`;
+  } else {
+    div.className = "msg-assistant";
+    let html = `<div class="msg-assistant-inner"><span class="msg-star">✺</span><div class="msg-content">${renderMarkdown(content)}</div></div>`;
+    if (mockup === "terminal") html += TERMINAL_MOCKUP_HTML;
+    if (mockup === "permission") html += PERMISSION_MOCKUP_HTML;
+    if (followups && followups.length > 0) {
+      html += `<div class="followups"><div class="followup-label">Keep going</div>`;
+      followups.forEach(q => {
+        html += `<button class="followup-btn" onclick="sendMessage(this.dataset.q, null)" data-q="${q.replace(/"/g,'&quot;')}"><span class="followup-arrow">›</span>${q}</button>`;
+      });
+      html += `</div>`;
+    }
+    div.innerHTML = html;
+  }
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendMessage(text, mockup) {
+  if (!text || !text.trim()) return;
+  const input = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const loading = document.getElementById("loading");
+
+  addMessage("user", text, null, null);
+  history.push({ role: "user", content: text });
+  input.value = "";
+  input.style.height = "auto";
+  sendBtn.disabled = true;
+  loading.style.display = "flex";
+  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: SYSTEM, messages: history })
+    });
+    const data = await res.json();
+    const raw = data.content?.find(b => b.type === "text")?.text || "No response.";
+    const { answer, followups } = parseResponse(raw);
+    history.push({ role: "assistant", content: answer });
+    addMessage("assistant", answer, mockup, followups);
+  } catch(e) {
+    addMessage("assistant", `Error: ${e.message}`, null, null);
+  }
+
+  loading.style.display = "none";
+  sendBtn.disabled = false;
+}
+
+// Input handling
+const input = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage(input.value, null);
+  }
+});
+
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = input.scrollHeight + "px";
+});
+
+sendBtn.addEventListener("click", () => sendMessage(input.value, null));
+</script>
+</body>
+</html>
